@@ -113,7 +113,7 @@ function Storefront() {
             <CategoryCircles onNavigateCategory={navigateToCategory} />
             
             <FeaturedOffers 
-              products={products.filter(p => !p.hasFreeShipping)} 
+              products={products.filter(p => p != null && !p.hasFreeShipping)} 
               onProductClick={navigateToProduct}
               onNavigateCategory={navigateToCategory}
             />
@@ -209,12 +209,8 @@ function Storefront() {
         {view === 'category' && selectedCategory && (() => {
           const category = CATEGORIES.find(c => c.id === selectedCategory);
           if (!category) return null;
-          const categoryProducts = products.filter(p => {
-            if (p.category === selectedCategory) return true;
-            return category.subcategories.some(
-              sub => sub.toLowerCase() === (p.category || '').toLowerCase()
-            );
-          });
+          // Strict category filter — CategoryPage handles subcategory filtering internally
+          const categoryProducts = products.filter(p => p != null && p.category === selectedCategory);
           return (
             <CategoryPage
               category={category}

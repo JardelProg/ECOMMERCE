@@ -39,21 +39,19 @@ export const CategoryPage: React.FC<CategoryPageProps> = ({
     setSelectedBrand(null);
   }, [activeSubcategory]);
 
-  // Flexible subcategory matcher: handles case, accents, and combined names
-  // e.g. "Furadeiras" matches products with subcategory "Furadeiras e Parafusadeiras"
+  // Strict case-insensitive match — no includes() to avoid cross-contamination
+  // e.g. "Parafusadeiras" must NOT match products with subcategory "Furadeiras"
   const subcategoryMatches = (productSubcategory: string | undefined, selected: string): boolean => {
     if (!productSubcategory) return false;
-    const prod = productSubcategory.toLowerCase().trim();
-    const sel = selected.toLowerCase().trim();
-    return prod === sel || prod.includes(sel) || sel.includes(prod);
+    return productSubcategory.toLowerCase().trim() === selected.toLowerCase().trim();
   };
 
   // Extract unique brands from category products
   const brands = useMemo(() => {
     const brandCount: Record<string, number> = {};
     
-    // Filter by subcategory first - exactly like in filteredProducts
-    let productsInSub = [...products];
+    // Filter by subcategory first — same logic as filteredProducts
+    let productsInSub = products.filter(p => p != null);
     if (activeSubcategory) {
       productsInSub = productsInSub.filter(p => subcategoryMatches(p.subcategory, activeSubcategory));
     }
@@ -69,11 +67,12 @@ export const CategoryPage: React.FC<CategoryPageProps> = ({
       .sort((a, b) => b.count - a.count);
   }, [products, activeSubcategory]);
 
-  // Filter products
+  // Filter products — strictly by subcategory to prevent cross-contamination
   const filteredProducts = useMemo(() => {
-    let result = [...products];
+    // Defensive: remove any undefined/null entries
+    let result = products.filter((p): p is Product => p != null);
     
-    // Filter by subcategory (flexible: case-insensitive + partial/combined names)
+    // Strict subcategory filter (case-insensitive exact match)
     if (activeSubcategory) {
       result = result.filter(p => subcategoryMatches(p.subcategory, activeSubcategory));
     }
@@ -211,7 +210,7 @@ export const CategoryPage: React.FC<CategoryPageProps> = ({
                 >
                   <div className="w-32 h-32 shrink-0 flex items-center justify-center bg-gray-50 rounded-lg overflow-hidden">
                     <img 
-                      src={product.images[0]} 
+                      src={product.images?.[0]} 
                       className="max-w-full max-h-full object-contain group-hover:scale-105 transition-transform" 
                       alt={product.name}
                       referrerPolicy="no-referrer"
