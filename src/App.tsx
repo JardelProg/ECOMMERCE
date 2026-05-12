@@ -209,7 +209,12 @@ function Storefront() {
         {view === 'category' && selectedCategory && (() => {
           const category = CATEGORIES.find(c => c.id === selectedCategory);
           if (!category) return null;
-          const categoryProducts = products.filter(p => p.category === selectedCategory);
+          const categoryProducts = products.filter(p => {
+            if (p.category === selectedCategory) return true;
+            return category.subcategories.some(
+              sub => sub.toLowerCase() === (p.category || '').toLowerCase()
+            );
+          });
           return (
             <CategoryPage
               category={category}
@@ -702,6 +707,3 @@ export default function App() {
     </AuthProvider>
   );
 }
-
-
-

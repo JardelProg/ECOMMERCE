@@ -34,10 +34,31 @@ export const CategoryPage: React.FC<CategoryPageProps> = ({
     setActiveSubcategory(initialSubcategory);
   }, [initialSubcategory]);
 
+  // Reset brand filter when subcategory changes
+  React.useEffect(() => {
+    setSelectedBrand(null);
+  }, [activeSubcategory]);
+
+  // Flexible subcategory matcher: handles case, accents, and combined names
+  // e.g. "Furadeiras" matches products with subcategory "Furadeiras e Parafusadeiras"
+  const subcategoryMatches = (productSubcategory: string | undefined, selected: string): boolean => {
+    if (!productSubcategory) return false;
+    const prod = productSubcategory.toLowerCase().trim();
+    const sel = selected.toLowerCase().trim();
+    return prod === sel || prod.includes(sel) || sel.includes(prod);
+  };
+
   // Extract unique brands from category products
   const brands = useMemo(() => {
     const brandCount: Record<string, number> = {};
-    products.forEach(p => {
+    
+    // Filter by subcategory first - exactly like in filteredProducts
+    let productsInSub = [...products];
+    if (activeSubcategory) {
+      productsInSub = productsInSub.filter(p => subcategoryMatches(p.subcategory, activeSubcategory));
+    }
+
+    productsInSub.forEach(p => {
       const brand = p.specs?.Marca || p.name.split(' ').slice(-1)[0];
       if (brand) {
         brandCount[brand] = (brandCount[brand] || 0) + 1;
@@ -46,20 +67,15 @@ export const CategoryPage: React.FC<CategoryPageProps> = ({
     return Object.entries(brandCount)
       .map(([name, count]) => ({ name, count }))
       .sort((a, b) => b.count - a.count);
-  }, [products]);
+  }, [products, activeSubcategory]);
 
   // Filter products
   const filteredProducts = useMemo(() => {
     let result = [...products];
     
-    // Filter by subcategory
+    // Filter by subcategory (flexible: case-insensitive + partial/combined names)
     if (activeSubcategory) {
-      const term = activeSubcategory.toLowerCase();
-      result = result.filter(p => 
-        (p.subcategory && p.subcategory.toLowerCase() === term) ||
-        p.name.toLowerCase().includes(term) || 
-        p.description?.toLowerCase().includes(term)
-      );
+      result = result.filter(p => subcategoryMatches(p.subcategory, activeSubcategory));
     }
     
     // Filter by brand
