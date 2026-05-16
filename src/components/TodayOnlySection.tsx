@@ -69,7 +69,15 @@ export const TodayOnlySection: React.FC<TodayOnlySectionProps> = ({ products, on
     return () => clearInterval(timer);
   }, []);
 
-  const offerProducts = products.filter(p => p.isOfferOfDay);
+  // Products for RECEBA EM 48H: Máquinas de Solda + Serra Circular
+  const SOLDA_IDS = ['solda1','solda2','solda3','solda4'];
+  const CIRCULAR_IDS = ['ndbosch120926','ndbosch120927','ndbosch131172','ndbosch131173'];
+  const TARGET_IDS = new Set([...SOLDA_IDS, ...CIRCULAR_IDS]);
+  const offerProducts = products.filter(p => TARGET_IDS.has(p.id)).length >= 4
+    ? products.filter(p => TARGET_IDS.has(p.id))
+    : products.filter(p => p.isOfferOfDay).length > 0
+      ? products.filter(p => p.isOfferOfDay)
+      : products.slice(4, 12);
 
   const scroll = (dir: 'left' | 'right') => {
     if (scrollRef.current) {
@@ -85,9 +93,9 @@ export const TodayOnlySection: React.FC<TodayOnlySectionProps> = ({ products, on
              <div className="w-2 h-10 bg-[#FF5A00] rounded-sm" />
              <div className="flex flex-col">
                <h2 className="text-[28px] font-black text-[#0D1B2A] flex items-center gap-3 uppercase italic tracking-tighter leading-none">
-                 SÓ HOJE
+                 RECEBA EM 48H!
                </h2>
-               <p className="text-xs font-bold text-gray-400 uppercase italic tracking-widest">Ofertas que desaparecem em:</p>
+               <p className="text-xs font-bold text-gray-400 uppercase italic tracking-widest">Entrega ultra-rápida em produtos selecionados:</p>
              </div>
           </div>
           
@@ -98,37 +106,52 @@ export const TodayOnlySection: React.FC<TodayOnlySectionProps> = ({ products, on
           </div>
         </div>
 
-        <div className="relative group">
-          <button 
-            onClick={() => scroll('left')}
-            className="absolute -left-6 top-1/2 -translate-y-1/2 z-20 w-12 h-12 bg-white rounded-full flex items-center justify-center shadow-xl text-[#FF5A00] transition-all hover:scale-110 active:scale-95 border-2 border-[#FF5A00]/10"
-          >
-            <ChevronLeft size={28} strokeWidth={3} />
-          </button>
-          
-          <div className="relative overflow-hidden">
-            <div className="absolute top-0 left-0 bottom-0 w-20 bg-gradient-to-r from-[#eeeeee] to-transparent z-10 pointer-events-none" />
-            <div className="absolute top-0 right-0 bottom-0 w-20 bg-gradient-to-l from-[#eeeeee] to-transparent z-10 pointer-events-none" />
-            
-            <div ref={scrollRef} className="flex gap-3 overflow-x-auto no-scrollbar scroll-smooth pb-4 px-1">
-              {offerProducts.map((product) => (
-                <div key={product.id} className="flex-shrink-0" style={{ width: 'calc((100% - 48px) / 5)' }}>
-                  <ProductCard 
-                    product={product} 
-                    onClick={() => onProductClick(product)}
-                    showTodayOnlyBadge={true}
-                  />
-                </div>
-              ))}
+        <div className="flex flex-col lg:flex-row gap-3" style={{ overflow: 'visible' }}>
+
+          {/* Banner 48H – sem sombra, preenchimento total, efeito 3D */}
+          <div className="hidden lg:block flex-shrink-0 self-stretch" style={{ width: 'calc((100% - 48px) / 5)', overflow: 'visible' }}>
+            <div className="h-full rounded-xl cursor-pointer hover:scale-[1.03] transition-transform duration-300" style={{ overflow: 'hidden', boxShadow: 'none' }}>
+              <img 
+                src="https://i.ibb.co/bMnLjWft/bann2.png" 
+                className="w-full h-full object-cover"
+                style={{ display: 'block', boxShadow: 'none', filter: 'none' }}
+                alt="Receba em 48 Horas"
+              />
             </div>
           </div>
 
-          <button 
-            onClick={() => scroll('right')}
-            className="absolute -right-6 top-1/2 -translate-y-1/2 z-20 w-12 h-12 bg-white rounded-full flex items-center justify-center shadow-xl text-[#FF5A00] transition-all hover:scale-110 active:scale-95 border-2 border-[#FF5A00]/10"
-          >
-            <ChevronRight size={28} strokeWidth={3} />
-          </button>
+          <div className="flex-grow min-w-0 relative group">
+            <button 
+              onClick={() => scroll('left')}
+              className="absolute -left-6 top-1/2 -translate-y-1/2 z-20 w-12 h-12 bg-white rounded-full flex items-center justify-center shadow-xl text-[#FF5A00] transition-all hover:scale-110 active:scale-95 border-2 border-[#FF5A00]/10"
+            >
+              <ChevronLeft size={28} strokeWidth={3} />
+            </button>
+            
+            <div className="relative overflow-hidden">
+              <div className="absolute top-0 left-0 bottom-0 w-20 bg-gradient-to-r from-[#eeeeee] to-transparent z-10 pointer-events-none" />
+              <div className="absolute top-0 right-0 bottom-0 w-20 bg-gradient-to-l from-[#eeeeee] to-transparent z-10 pointer-events-none" />
+              
+              <div ref={scrollRef} className="flex gap-3 overflow-x-auto no-scrollbar scroll-smooth pb-4 px-1">
+                {offerProducts.map((product) => (
+                  <div key={product.id} className="flex-shrink-0" style={{ width: 'calc((100% - 36px) / 4)' }}>
+                    <ProductCard 
+                      product={product} 
+                      onClick={() => onProductClick(product)}
+                      showTodayOnlyBadge={true}
+                    />
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            <button 
+              onClick={() => scroll('right')}
+              className="absolute -right-6 top-1/2 -translate-y-1/2 z-20 w-12 h-12 bg-white rounded-full flex items-center justify-center shadow-xl text-[#FF5A00] transition-all hover:scale-110 active:scale-95 border-2 border-[#FF5A00]/10"
+            >
+              <ChevronRight size={28} strokeWidth={3} />
+            </button>
+          </div>
         </div>
         
         <div className="mt-8 flex justify-end">

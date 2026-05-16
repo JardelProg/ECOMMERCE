@@ -2,23 +2,24 @@ import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { X, Zap, ShoppingCart } from 'lucide-react';
 import { Product } from '../types';
-import { MOCK_PRODUCTS } from '../constants';
 import { formatCurrency } from '../lib/utils';
 
 interface PromotionPopupProps {
   onProductClick: (product: Product) => void;
+  products: Product[];
 }
 
-export const PromotionPopup: React.FC<PromotionPopupProps> = ({ onProductClick }) => {
+export const PromotionPopup: React.FC<PromotionPopupProps> = ({ onProductClick, products }) => {
   const [isVisible, setIsVisible] = useState(false);
   const [currentProduct, setCurrentProduct] = useState<Product | null>(null);
   const [canShowNext, setCanShowNext] = useState(true);
   const [progress, setProgress] = useState(100);
 
   useEffect(() => {
-    if (!canShowNext) return;
+    if (!canShowNext || products.length === 0) return;
     const show = setTimeout(() => {
-      const p = MOCK_PRODUCTS[Math.floor(Math.random() * MOCK_PRODUCTS.length)];
+      const allowedProducts = products.filter(p => !['prod10', 'prod11', 'prod16', 'prod21'].includes(p.id));
+      const p = allowedProducts[Math.floor(Math.random() * allowedProducts.length)];
       setCurrentProduct(p);
       setProgress(100);
       setIsVisible(true);
@@ -96,7 +97,6 @@ export const PromotionPopup: React.FC<PromotionPopupProps> = ({ onProductClick }
                   src={currentProduct.images[0]}
                   alt={currentProduct.name}
                   className="max-w-full max-h-full object-contain"
-                  referrerPolicy="no-referrer"
                 />
               </div>
               <div className="flex flex-col justify-center min-w-0">

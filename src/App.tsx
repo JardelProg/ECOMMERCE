@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, lazy, Suspense } from 'react';
 import { AuthProvider } from './contexts/AuthContext';
 import { CartProvider } from './contexts/CartContext';
 import { Header } from './components/Header';
@@ -11,18 +11,24 @@ import { TodayOnlySection } from './components/TodayOnlySection';
 import { FreeShippingSection } from './components/FreeShippingSection';
 import { BrandCarousel } from './components/BrandCarousel';
 import { LoginModal } from './components/LoginModal';
-import { AdminPanel } from './components/AdminPanel';
 import { PromotionPopup } from './components/PromotionPopup';
 import { CategoryPage } from './components/CategoryPage';
+import { CategoryDock } from './components/CategoryDock';
 import { Product } from './types';
 import { formatCurrency } from './lib/utils';
+import { useProducts } from './hooks/useProducts';
+
+// Lazy-load heavy components — not needed on initial render
+const CinematicIntro = lazy(() => import('./components/CinematicIntro').then(m => ({ default: m.CinematicIntro })));
+const AdminPanel = lazy(() => import('./components/AdminPanel').then(m => ({ default: m.AdminPanel })));
 import { 
   ChevronRight, ChevronDown, ShieldCheck, Truck, Clock, Phone, MapPin, 
   Instagram, Facebook, Youtube, CreditCard, Apple, Wallet,
   Star, Minus, Plus, Share2, Heart, CheckCircle2, Wrench, Users,
   Flame, Search, ShoppingCart, Package
 } from 'lucide-react';
-import { MOCK_PRODUCTS, CATEGORIES } from './constants';
+import { CATEGORIES } from './constants';
+import ProductDescription from './components/ProductDescription';
 
 const TrustBadge = ({ icon: Icon, title, sub }: { icon: any, title: string, sub: string }) => (
   <div className="flex items-center gap-3 py-4 lg:py-6 group cursor-pointer hover:bg-white/5 transition-colors px-4 border-r border-gray-100 last:border-r-0 flex-1 min-w-[200px]">
@@ -41,7 +47,7 @@ const mockReviews = [
 ];
 
 function Storefront() {
-  const [products, setProducts] = useState<Product[]>(MOCK_PRODUCTS);
+  const { products, loading, setProducts } = useProducts();
   const [isCartOpen, setIsCartOpen] = useState(false);
   const [isLoginOpen, setIsLoginOpen] = useState(false);
   const [isAdmin, setIsAdmin] = useState(false);
@@ -67,13 +73,18 @@ function Storefront() {
     window.scrollTo(0, 0);
   };
 
+  // Filter products for home page - exclude specific items requested by user
+  const homeProducts = products.filter(p => p != null && !['prod10', 'prod11', 'prod16', 'prod21'].includes(p.id));
+
   if (isAdmin) {
     return (
-      <AdminPanel 
-        products={products} 
-        setProducts={setProducts} 
-        onLogout={() => setIsAdmin(false)} 
-      />
+      <Suspense fallback={<div className="flex items-center justify-center min-h-screen text-gray-400">Carregando painel...</div>}>
+        <AdminPanel 
+          products={products} 
+          setProducts={setProducts} 
+          onLogout={() => setIsAdmin(false)} 
+        />
+      </Suspense>
     );
   }
 
@@ -84,12 +95,23 @@ function Storefront() {
         onNavigateCategory={navigateToCategory}
         onNavigateHome={() => { setView('home'); window.scrollTo(0,0); }}
       />
+
+      <CategoryDock onNavigateCategory={navigateToCategory} />
       
       {isLoginOpen && (
         <LoginModal 
           onClose={() => setIsLoginOpen(false)} 
           onAdminLogin={() => { setIsAdmin(true); setIsLoginOpen(false); }} 
         />
+      )}
+
+      {loading && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-white/80 backdrop-blur-sm">
+          <div className="flex flex-col items-center gap-4">
+            <div className="w-10 h-10 border-4 border-[#FF5A00] border-t-transparent rounded-full animate-spin" />
+            <p className="text-sm font-bold text-gray-500 uppercase tracking-widest">Carregando produtos...</p>
+          </div>
+        </div>
       )}
 
       <main>
@@ -113,7 +135,7 @@ function Storefront() {
             <CategoryCircles onNavigateCategory={navigateToCategory} />
             
             <FeaturedOffers 
-              products={products.filter(p => p != null && !p.hasFreeShipping)} 
+              products={homeProducts.filter(p => !p.hasFreeShipping)} 
               onProductClick={navigateToProduct}
               onNavigateCategory={navigateToCategory}
             />
@@ -121,46 +143,31 @@ function Storefront() {
             <ProductGrid 
               title="Mais Procurados" 
               subtitle="Confira as ferramentas preferidas dos profissionais" 
-              products={products}
+              products={homeProducts}
               onProductClick={navigateToProduct}
               onNavigateCategory={navigateToCategory}
             />
 
-            {/* Banners Below Mais Procurados */}
-            <section className="py-8 container mx-auto px-4">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div className="group overflow-hidden rounded-xl cursor-pointer relative aspect-[16/6] md:aspect-[16/5]">
-                  <img src="https://picsum.photos/seed/tool1/1200/400" className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" referrerPolicy="no-referrer" alt="" />
-                  <div className="absolute inset-0 bg-black/20 group-hover:bg-black/10 transition-colors" />
-                  <div className="absolute inset-0 flex items-center px-8">
-                     <div className="text-white">
-                        <span className="bg-[#FF5A00] px-2 py-0.5 rounded text-[10px] font-black uppercase italic">Oferta Especial</span>
-                        <h3 className="text-2xl font-black italic uppercase tracking-tighter mt-1">Máquinas de Corte</h3>
-                        <p className="text-xs font-bold opacity-80 uppercase italic tracking-widest mt-1">Até 40% OFF no Pix</p>
-                     </div>
-                  </div>
-                </div>
-                <div className="group overflow-hidden rounded-xl cursor-pointer relative aspect-[16/6] md:aspect-[16/5]">
-                  <img src="https://picsum.photos/seed/tool2/1200/400" className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" referrerPolicy="no-referrer" alt="" />
-                  <div className="absolute inset-0 bg-black/20 group-hover:bg-black/10 transition-colors" />
-                  <div className="absolute inset-0 flex items-center px-8">
-                     <div className="text-white">
-                        <span className="bg-[#0D1B2A] px-2 py-0.5 rounded text-[10px] font-black uppercase italic">Lançamento</span>
-                        <h3 className="text-2xl font-black italic uppercase tracking-tighter mt-1">Nova Linha SMB Pro</h3>
-                        <p className="text-xs font-bold opacity-80 uppercase italic tracking-widest mt-1">Tecnologia Alemã</p>
-                     </div>
-                  </div>
-                </div>
+            {/* Banner Single - Replacing previous dual banners */}
+            <section className="pt-8 pb-4 container mx-auto px-4">
+              <div className="group overflow-hidden rounded-2xl cursor-pointer relative shadow-xl">
+                <img 
+                  src="https://i.ibb.co/zHn4k2Zn/CARDS.png" 
+                  className="w-full h-auto object-cover group-hover:scale-[1.02] transition-transform duration-700" 
+                  alt="Promoção Especial SMB" 
+                />
               </div>
             </section>
 
+            <BrandCarousel onNavigateCategory={navigateToCategory} />
+
             <FreeShippingSection 
-              products={products}
+              products={homeProducts}
               onProductClick={navigateToProduct}
               onNavigateCategory={navigateToCategory}
             />
             <TodayOnlySection 
-              products={products}
+              products={homeProducts}
               onProductClick={navigateToProduct}
               onNavigateCategory={navigateToCategory}
             />
@@ -173,7 +180,6 @@ function Storefront() {
                     src="https://images.unsplash.com/photo-1581092160607-ee22621dd758?auto=format&fit=crop&q=80&w=2000" 
                     className="w-full h-full object-cover opacity-60 group-hover:scale-105 transition-transform duration-1000" 
                     alt="Processo Industrial"
-                    referrerPolicy="no-referrer"
                   />
                   <div className="absolute inset-0 flex flex-col items-center justify-center gap-4">
                     <div className="w-16 h-16 bg-white/20 backdrop-blur-md rounded-full flex items-center justify-center group-hover:scale-110 group-hover:bg-[#FF5A00] transition-all duration-300">
@@ -188,17 +194,15 @@ function Storefront() {
               </div>
             </section>
 
-            <BrandCarousel onNavigateCategory={navigateToCategory} />
-
             {/* Mid Banners */}
             <section className="py-8 container mx-auto px-4">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div className="group overflow-hidden rounded-xl cursor-pointer relative aspect-[16/6] md:aspect-[16/5]">
-                  <img src="https://picsum.photos/seed/promo1/1200/400" className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" referrerPolicy="no-referrer" alt="" />
+                  <img src="https://picsum.photos/seed/promo1/1200/400" className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" alt="" />
                   <div className="absolute inset-0 bg-black/20 group-hover:bg-black/10 transition-colors" />
                 </div>
                 <div className="group overflow-hidden rounded-xl cursor-pointer relative aspect-[16/6] md:aspect-[16/5]">
-                  <img src="https://picsum.photos/seed/promo2/1200/400" className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" referrerPolicy="no-referrer" alt="" />
+                  <img src="https://picsum.photos/seed/promo2/1200/400" className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" alt="" />
                   <div className="absolute inset-0 bg-black/20 group-hover:bg-black/10 transition-colors" />
                 </div>
               </div>
@@ -244,7 +248,7 @@ function Storefront() {
                       src={selectedProduct.images[selectedThumb] || selectedProduct.images[0]} 
                       alt={selectedProduct.name} 
                       className="w-full aspect-square object-contain" 
-                      referrerPolicy="no-referrer" 
+                      
                     />
                     <div className="absolute top-4 right-4 flex flex-col gap-2">
                        <button className="p-2 bg-white rounded-full shadow-md text-gray-400 hover:text-red-500 border border-gray-100"><Heart size={20} /></button>
@@ -260,7 +264,7 @@ function Storefront() {
                           selectedThumb === i ? 'border-[#FF5A00] ring-1 ring-[#FF5A00]' : 'border-gray-200 hover:border-gray-400'
                         }`}
                       >
-                        <img src={img} className="max-w-full max-h-full object-contain" referrerPolicy="no-referrer" />
+                        <img src={img} className="max-w-full max-h-full object-contain" />
                       </button>
                     ))}
                     {/* Placeholder placeholders if less than 5 */}
@@ -404,13 +408,8 @@ function Storefront() {
                       <Package size={16} className="text-[#FF5A00]" />
                       <h3 className="font-bold text-[#222] text-[14px] uppercase tracking-tight">Descrição do produto</h3>
                    </div>
-                   <div className="p-6 font-poppins">
-                      <p className="text-[13px] font-bold text-gray-900 mb-4 leading-relaxed">{selectedProduct.description}</p>
-                      <div className="text-[12px] text-gray-600 leading-relaxed space-y-4">
-                        <p>A máquina de solda multiprocesso é o tipo de equipamento que simplifica a vida de quem solda: com um único inversor, você consegue realizar diferentes tipos de soldagem, alternando a fonte de corrente elétrica conforme o processo e o material. A Power 160A Bivolt Automático foi pensada para entregar essa flexibilidade com praticidade, sendo uma máquina de solda inversora compacta, fácil de transportar e indicada para você que precisa trabalhar em diferentes locais, mantendo desempenho e controle.</p>
-                        <p>No dia a dia, isso significa ter uma soldadora multiprocesso capaz de executar soldagem MIG/MAG, TIG e eletrodo revestido (MMA), além de aplicações citadas como arco submerso, sem a necessidade de investir em vários equipamentos separados. O conjunto traz Euro Conector, é compatível com diversos tipos de arames e eletrodos e aceita suporte de arame de 15 kgf, aumentando a autonomia em trabalhos contínuos. A faixa de corrente da máquina inversora chega a 160A em MIG/MAG (220V), com opções adequadas também para MMA/TIG.</p>
-                        <p>A parte elétrica e de proteção da máquina de solda inversora reforça o uso seguro e consistente: tensão sem carga de 68V, eficiência de 85%, grau de proteção IP21S e conformidade com IEC 60974-1. O equipamento trabalha com frequência 60 Hz, tem dimensões 320×150×280 mm, pesa 6,7 kgf, possui alça para transporte e display digital, facilitando ajustes com leitura clara.</p>
-                      </div>
+                   <div className="p-6">
+                      <ProductDescription product={selectedProduct} />
                    </div>
                 </div>
 
@@ -425,11 +424,11 @@ function Storefront() {
                         </div>
                         <Plus size={12} className="text-gray-300" />
                         <div className="w-14 h-14 bg-white rounded border border-gray-100 p-1">
-                          <img src={MOCK_PRODUCTS[4].images[0]} className="w-full h-full object-contain" />
+                          <img src={products[4]?.images[0]} className="w-full h-full object-contain" />
                         </div>
                         <Plus size={12} className="text-gray-300" />
                         <div className="w-14 h-14 bg-white rounded border border-gray-200 p-1">
-                          <img src={MOCK_PRODUCTS[5].images[0]} className="w-full h-full object-contain" />
+                          <img src={products[5]?.images[0]} className="w-full h-full object-contain" />
                         </div>
                       </div>
 
@@ -499,10 +498,10 @@ function Storefront() {
                   <h3 className="font-bold text-[#222] text-[18px] uppercase tracking-tight">Quem viu este produto, viu também</h3>
                 </div>
                 <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
-                  {MOCK_PRODUCTS.filter(p => p.id !== selectedProduct.id).slice(0, 5).map(p => (
+                  {products.filter(p => p.id !== selectedProduct.id).slice(0, 5).map(p => (
                     <div key={p.id} className="bg-white border border-gray-100 p-4 rounded-xl cursor-pointer hover:shadow-lg transition-all group" onClick={() => navigateToProduct(p)}>
                        <div className="aspect-square mb-3 flex items-center justify-center">
-                         <img src={p.images[0]} className="max-w-full max-h-full object-contain group-hover:scale-105 transition-transform" referrerPolicy="no-referrer" />
+                         <img src={p.images[0]} className="max-w-full max-h-full object-contain group-hover:scale-105 transition-transform" />
                        </div>
                        <h4 className="text-[11px] font-medium text-gray-700 line-clamp-2 h-8 mb-2">{p.name}</h4>
                        <div className="flex items-baseline gap-1">
@@ -689,15 +688,22 @@ function Storefront() {
 </footer>
 
       <CartSidebar isOpen={isCartOpen} onClose={() => setIsCartOpen(false)} />
-      <PromotionPopup onProductClick={navigateToProduct} />
+      <PromotionPopup onProductClick={navigateToProduct} products={homeProducts} />
     </div>
   );
 }
 
 export default function App() {
+  const [introDone, setIntroDone] = useState(false);
+
   return (
     <AuthProvider>
       <CartProvider>
+        {!introDone && (
+          <Suspense fallback={null}>
+            <CinematicIntro onComplete={() => setIntroDone(true)} />
+          </Suspense>
+        )}
         <Storefront />
       </CartProvider>
     </AuthProvider>

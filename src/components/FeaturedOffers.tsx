@@ -16,9 +16,10 @@ export const FeaturedOffers: React.FC<FeaturedOffersProps> = ({ products, onProd
   const { addToCart } = useCart();
   const scrollRef = useRef<HTMLDivElement>(null);
 
+  // Wait until we have enough products to render safely
+  if (products.length < 6) return null;
+
   const mainProducts = products.slice(0, 4);
-  const sideBannerTop = products[4] || products[0];
-  const sideBannerBottom = products[5] || products[1];
 
   const scroll = (dir: 'left' | 'right') => {
     if (scrollRef.current) {
@@ -96,7 +97,6 @@ export const FeaturedOffers: React.FC<FeaturedOffersProps> = ({ products, onProd
                           src={product.images[0]}
                           alt={product.name}
                           className="max-h-full max-w-full object-contain group-hover:scale-110 transition-transform duration-500"
-                          referrerPolicy="no-referrer"
                         />
                       </div>
 
@@ -145,67 +145,17 @@ export const FeaturedOffers: React.FC<FeaturedOffersProps> = ({ products, onProd
             </div>
           </div>
 
-          {/* ── Right sidebar banners ── */}
-          <div className="lg:w-[340px] flex flex-col gap-4 w-full">
-            {/* Top banner (Orange highlight) */}
+          {/* ── Right sidebar banner (Single Vertical) ── */}
+          <div className="lg:w-[340px] w-full">
             <div
-              className="flex-1 bg-[#FF5A00] rounded-xl p-6 flex flex-col items-stretch cursor-pointer hover:brightness-110 transition-all shadow-xl relative overflow-hidden group"
-              onClick={() => onProductClick(sideBannerTop)}
+              className="h-full cursor-pointer hover:brightness-105 transition-all group relative"
+              onClick={() => onNavigateCategory?.('eletricas')}
             >
-              <div className="flex items-center gap-2 text-white mb-4">
-                 <span className="text-5xl font-black leading-none italic tracking-tighter">49%</span>
-                 <div className="flex flex-col leading-none translate-y-[2px]">
-                   <span className="text-[12px] font-black uppercase opacity-90 italic">DE</span>
-                   <span className="text-[12px] font-black uppercase italic">DESCONTO</span>
-                 </div>
-              </div>
-              
-              <div className="flex items-center gap-4">
-                 <div className="flex-1 pb-2">
-                    <h4 className="text-white text-[15px] font-poppins font-normal leading-tight line-clamp-2 mb-4 tracking-tight">
-                      {sideBannerTop.name}
-                    </h4>
-                    <p className="text-white/70 text-[11px] line-through font-bold">
-                      DE: {formatCurrency(sideBannerTop.price * 2)}
-                    </p>
-                    <div className="flex items-baseline gap-1 text-white">
-                      <span className="text-xs font-black">R$</span>
-                      <span className="text-3xl font-black tracking-tighter italic">
-                        {sideBannerTop.price.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
-                      </span>
-                    </div>
-                    <p className="text-[11px] text-[#4ADE80] font-black uppercase mt-1 italic tracking-tight">à vista no Pix ou Boleto</p>
-                 </div>
-                 <div className="w-28 h-28 bg-white rounded-lg p-2 flex items-center justify-center shadow-inner shrink-0 self-center">
-                    <img src={sideBannerTop.images[0]} className="max-w-full max-h-full object-contain" referrerPolicy="no-referrer" />
-                 </div>
-              </div>
-              
-              <div className="mt-4 bg-[#28A745] text-white py-2 text-center rounded-lg font-black text-[11px] uppercase italic tracking-widest flex items-center justify-center gap-2">
-                 <Truck size={14} /> Frete Grátis
-              </div>
-            </div>
-
-            {/* Bottom banner (Deep dark) */}
-            <div
-              className="flex-1 bg-[#0D1B2A] rounded-xl p-5 flex items-stretch gap-4 cursor-pointer hover:brightness-125 transition-all shadow-lg"
-              onClick={() => onProductClick(sideBannerBottom)}
-            >
-              <div className="flex-1 flex flex-col justify-center">
-                <h4 className="text-white text-[15px] font-poppins font-normal leading-tight mb-4 tracking-tight line-clamp-2 uppercase italic">
-                  {sideBannerBottom.name}
-                </h4>
-                <div className="flex items-baseline gap-1">
-                  <span className="text-[#FF5A00] text-sm font-black italic">R$</span>
-                  <span className="text-white text-3xl font-black tracking-tighter italic">
-                    {sideBannerBottom.price.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
-                  </span>
-                </div>
-                <p className="text-[11px] text-[#FF5A00] font-black uppercase mt-1 italic tracking-tight underline underline-offset-4 decoration-2">à vista no Pix ou Boleto</p>
-              </div>
-              <div className="w-24 h-24 bg-white rounded-lg p-2 flex items-center justify-center shrink-0 self-center shadow-lg">
-                <img src={sideBannerBottom.images[0]} className="max-w-full max-h-full object-contain" referrerPolicy="no-referrer" />
-              </div>
+              <img 
+                src="https://i.ibb.co/20fNnX53/vertical2.png" 
+                className="w-full h-auto block group-hover:scale-[1.02] transition-transform duration-700" 
+                alt="Promoção Especial SMB"
+              />
             </div>
           </div>
 

@@ -61,7 +61,7 @@ export const CartSidebar: React.FC<CartSidebarProps> = ({ isOpen, onClose }) => 
                 items.map((item) => (
                   <div key={item.id} className="flex gap-4 border-b border-gray-100 pb-4">
                     <div className="w-20 h-20 bg-gray-50 rounded p-1">
-                      <img src={item.images[0]} alt={item.name} className="w-full h-full object-contain" referrerPolicy="no-referrer" />
+                      <img src={item.images[0]} alt={item.name} className="w-full h-full object-contain" />
                     </div>
                     <div className="flex-1 min-w-0">
                       <h4 className="text-[13px] font-bold text-gray-800 line-clamp-1 mb-1">{item.name}</h4>

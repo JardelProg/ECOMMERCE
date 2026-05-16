@@ -28,6 +28,7 @@ export const CategoryPage: React.FC<CategoryPageProps> = ({
   const [selectedBrand, setSelectedBrand] = useState<string | null>(null);
   const [sortBy, setSortBy] = useState('relevance');
   const [gridView, setGridView] = useState<'grid' | 'list'>('grid');
+  const [visibleCount, setVisibleCount] = useState(24);
 
   // Sync subcategory when prop changes
   React.useEffect(() => {
@@ -37,6 +38,7 @@ export const CategoryPage: React.FC<CategoryPageProps> = ({
   // Reset brand filter when subcategory changes
   React.useEffect(() => {
     setSelectedBrand(null);
+    setVisibleCount(24);
   }, [activeSubcategory]);
 
   // Strict case-insensitive match — no includes() to avoid cross-contamination
@@ -92,6 +94,9 @@ export const CategoryPage: React.FC<CategoryPageProps> = ({
     
     return result;
   }, [products, activeSubcategory, selectedBrand, sortBy]);
+
+  // Paginated slice — only render what's visible
+  const visibleProducts = filteredProducts.slice(0, visibleCount);
 
   return (
     <div className="bg-[#eeeeee] min-h-screen">
@@ -190,67 +195,82 @@ export const CategoryPage: React.FC<CategoryPageProps> = ({
 
         {/* PRODUCT GRID/LIST */}
         {filteredProducts.length > 0 ? (
-          gridView === 'grid' ? (
-            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 mb-12">
-              {filteredProducts.map(product => (
-                <ProductCard 
-                  key={product.id} 
-                  product={product} 
-                  onClick={() => onProductClick(product)} 
-                />
-              ))}
-            </div>
-          ) : (
-            <div className="flex flex-col gap-3 mb-12">
-              {filteredProducts.map(product => (
-                <div 
-                  key={product.id} 
-                  onClick={() => onProductClick(product)}
-                  className="bg-white rounded-xl border border-gray-100 p-4 flex gap-4 cursor-pointer hover:shadow-md transition-all group"
+          <>
+            {gridView === 'grid' ? (
+              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 mb-6">
+                {visibleProducts.map(product => (
+                  <ProductCard 
+                    key={product.id} 
+                    product={product} 
+                    onClick={() => onProductClick(product)} 
+                  />
+                ))}
+              </div>
+            ) : (
+              <div className="flex flex-col gap-3 mb-6">
+                {visibleProducts.map(product => (
+                  <div 
+                    key={product.id} 
+                    onClick={() => onProductClick(product)}
+                    className="bg-white rounded-xl border border-gray-100 p-4 flex gap-4 cursor-pointer hover:shadow-md transition-all group"
+                  >
+                    <div className="w-32 h-32 shrink-0 flex items-center justify-center bg-gray-50 rounded-lg overflow-hidden">
+                      <img 
+                        src={product.images?.[0]} 
+                        loading="lazy"
+                        decoding="async"
+                        className="max-w-full max-h-full object-contain group-hover:scale-105 transition-transform" 
+                        alt={product.name}
+                      />
+                    </div>
+                    <div className="flex-1 flex flex-col justify-between">
+                      <div>
+                        <h3 className="text-[14px] font-medium text-[#222] leading-tight mb-1 line-clamp-2">{product.name}</h3>
+                        <div className="flex items-center gap-1 mb-2">
+                          {[1,2,3,4,5].map(i => (
+                            <Star 
+                              key={i} 
+                              size={11} 
+                              fill={i <= Math.round(product.rating) ? '#FBBF24' : 'none'} 
+                              stroke="#FBBF24" 
+                            />
+                          ))}
+                          <span className="text-[11px] text-gray-400 ml-1">({product.reviewCount})</span>
+                        </div>
+                      </div>
+                      <div>
+                        <div className="flex items-baseline gap-1">
+                          <span className="text-[#FF5A00] font-black text-[11px]">R$</span>
+                          <span className="text-[22px] font-black text-[#222] tracking-tighter">{Math.floor(product.price).toLocaleString('pt-BR')}</span>
+                          <span className="text-[14px] font-black text-[#222]">,{(product.price % 1).toFixed(2).split('.')[1]}</span>
+                        </div>
+                        {product.hasFreeShipping && (
+                          <span className="text-[11px] font-bold text-[#16A34A]">✓ Frete Grátis</span>
+                        )}
+                      </div>
+                    </div>
+                    <div className="flex items-center">
+                      <button className="bg-[#16A34A] hover:bg-[#149141] text-white px-4 py-2 rounded-lg font-bold text-[12px] uppercase transition-all whitespace-nowrap">
+                        Adicionar ao carrinho
+                      </button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+
+            {/* Load More Button */}
+            {visibleCount < filteredProducts.length && (
+              <div className="flex justify-center mb-12">
+                <button
+                  onClick={() => setVisibleCount(c => c + 24)}
+                  className="px-10 py-3 border-2 border-[#FF5A00] text-[#FF5A00] font-black text-[13px] uppercase tracking-tight rounded-lg hover:bg-[#FF5A00] hover:text-white transition-all"
                 >
-                  <div className="w-32 h-32 shrink-0 flex items-center justify-center bg-gray-50 rounded-lg overflow-hidden">
-                    <img 
-                      src={product.images?.[0]} 
-                      className="max-w-full max-h-full object-contain group-hover:scale-105 transition-transform" 
-                      alt={product.name}
-                      referrerPolicy="no-referrer"
-                    />
-                  </div>
-                  <div className="flex-1 flex flex-col justify-between">
-                    <div>
-                      <h3 className="text-[14px] font-medium text-[#222] leading-tight mb-1 line-clamp-2">{product.name}</h3>
-                      <div className="flex items-center gap-1 mb-2">
-                        {[1,2,3,4,5].map(i => (
-                          <Star 
-                            key={i} 
-                            size={11} 
-                            fill={i <= Math.round(product.rating) ? '#FBBF24' : 'none'} 
-                            stroke="#FBBF24" 
-                          />
-                        ))}
-                        <span className="text-[11px] text-gray-400 ml-1">({product.reviewCount})</span>
-                      </div>
-                    </div>
-                    <div>
-                      <div className="flex items-baseline gap-1">
-                        <span className="text-[#FF5A00] font-black text-[11px]">R$</span>
-                        <span className="text-[22px] font-black text-[#222] tracking-tighter">{Math.floor(product.price).toLocaleString('pt-BR')}</span>
-                        <span className="text-[14px] font-black text-[#222]">,{(product.price % 1).toFixed(2).split('.')[1]}</span>
-                      </div>
-                      {product.hasFreeShipping && (
-                        <span className="text-[11px] font-bold text-[#16A34A]">✓ Frete Grátis</span>
-                      )}
-                    </div>
-                  </div>
-                  <div className="flex items-center">
-                    <button className="bg-[#16A34A] hover:bg-[#149141] text-white px-4 py-2 rounded-lg font-bold text-[12px] uppercase transition-all whitespace-nowrap">
-                      Adicionar ao carrinho
-                    </button>
-                  </div>
-                </div>
-              ))}
-            </div>
-          )
+                  Carregar mais ({filteredProducts.length - visibleCount} produtos restantes)
+                </button>
+              </div>
+            )}
+          </>
         ) : (
           <div className="text-center py-20 bg-white rounded-2xl border border-gray-100 mb-12">
             <Package size={48} className="text-gray-200 mx-auto mb-4" />

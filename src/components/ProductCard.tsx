@@ -10,7 +10,7 @@ interface ProductCardProps {
   showTodayOnlyBadge?: boolean;
 }
 
-export const ProductCard: React.FC<ProductCardProps> = ({ product, onClick, showTodayOnlyBadge }) => {
+export const ProductCard: React.FC<ProductCardProps> = React.memo(({ product, onClick, showTodayOnlyBadge }) => {
   const { addToCart } = useCart();
   const [isHovered, setIsHovered] = useState(false);
 
@@ -33,8 +33,9 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product, onClick, show
         <img 
           src={product.images[0]} 
           alt={product.name}
+          loading="lazy"
+          decoding="async"
           className="max-h-full max-w-full object-contain group-hover:scale-105 transition-transform duration-500"
-          referrerPolicy="no-referrer"
         />
         <div className="absolute top-0 left-0 z-10 flex flex-col gap-1">
           {product.originalPrice && product.originalPrice > product.price && (
@@ -59,7 +60,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product, onClick, show
 
           {showTodayOnlyBadge && (
             <div className="bg-red-600 text-white px-2 py-0.5 text-[9px] font-black uppercase tracking-tighter w-fit rounded-sm italic">
-              SÓ HOJE
+              RECEBA EM 48H
             </div>
           )}
         </div>
@@ -119,4 +120,4 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product, onClick, show
         </div>
     </div>
   );
-};
+});

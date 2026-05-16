@@ -1,78 +1,152 @@
-import React, { useRef } from 'react';
-import { ChevronLeft, ChevronRight } from 'lucide-react';
+import React, { useState, useEffect, useRef } from 'react';
+import { useMotionValue, animate, motion } from 'framer-motion';
 
-const brands = [
-  { name: 'Raven', logo: 'https://picsum.photos/seed/raven/200/200' },
-  { name: 'V8 Brasil', logo: 'https://picsum.photos/seed/v8/200/200' },
-  { name: 'Bovenau', logo: 'https://picsum.photos/seed/bovenau/200/200' },
-  { name: 'Escaleve', logo: 'https://picsum.photos/seed/escaleve/200/200' },
-  { name: 'Lar Plásticos', logo: 'https://picsum.photos/seed/lar/200/200' },
-  { name: 'Metalpama', logo: 'https://picsum.photos/seed/metalpama/200/200' },
-  { name: 'Dewalt', logo: 'https://picsum.photos/seed/dewalt/200/200' },
-  { name: 'Bosch', logo: 'https://picsum.photos/seed/bosch/200/200' },
-  { name: 'Makita', logo: 'https://picsum.photos/seed/makita/200/200' },
-];
+// ── InfiniteSlider (inline) ──────────────────────────────────────────────────
+function InfiniteSlider({ children, gap = 16, speed = 25, speedOnHover }: {
+  children: React.ReactNode;
+  gap?: number;
+  speed?: number;
+  speedOnHover?: number;
+}) {
+  const [currentDuration, setCurrentDuration] = useState(speed);
+  const [containerWidth, setContainerWidth] = useState(0);
+  const ref = useRef<HTMLDivElement>(null);
+  const translation = useMotionValue(0);
+  const [isTransitioning, setIsTransitioning] = useState(false);
+  const [key, setKey] = useState(0);
 
-export const BrandCarousel: React.FC<{ 
-  onNavigateCategory?: (categoryId: string, subcategory?: string) => void 
-}> = ({ onNavigateCategory }) => {
-  const scrollRef = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    if (ref.current) setContainerWidth(ref.current.offsetWidth);
+  }, []);
 
-  const scroll = (dir: 'left' | 'right') => {
-    if (scrollRef.current) {
-      scrollRef.current.scrollBy({ left: dir === 'left' ? -200 : 200, behavior: 'smooth' });
+  useEffect(() => {
+    const size = containerWidth;
+    const contentSize = size + gap;
+    const from = 0;
+    const to = -contentSize / 2;
+
+    let controls: any;
+    if (isTransitioning) {
+      controls = animate(translation, [translation.get(), to], {
+        ease: 'linear',
+        duration: currentDuration * Math.abs((translation.get() - to) / contentSize),
+        onComplete: () => { setIsTransitioning(false); setKey(k => k + 1); },
+      });
+    } else {
+      controls = animate(translation, [from, to], {
+        ease: 'linear',
+        duration: currentDuration,
+        repeat: Infinity,
+        repeatType: 'loop',
+        repeatDelay: 0,
+        onRepeat: () => { translation.set(from); },
+      });
     }
-  };
+    return controls?.stop;
+  }, [key, translation, currentDuration, containerWidth, gap, isTransitioning]);
+
+  const hoverProps = speedOnHover ? {
+    onHoverStart: () => { setIsTransitioning(true); setCurrentDuration(speedOnHover); },
+    onHoverEnd:   () => { setIsTransitioning(true); setCurrentDuration(speed); },
+  } : {};
 
   return (
-    <section className="py-12 bg-white">
+    <div className="overflow-hidden">
+      <motion.div
+        ref={ref}
+        className="flex w-max"
+        style={{ x: translation, gap: `${gap}px` }}
+        {...hoverProps}
+      >
+        {children}
+        {children}
+      </motion.div>
+    </div>
+  );
+}
+
+// ── ProgressiveBlur (inline) ─────────────────────────────────────────────────
+function ProgressiveBlur({ direction = 'left', blurLayers = 8, blurIntensity = 0.25, className = '' }: {
+  direction?: 'left' | 'right';
+  blurLayers?: number;
+  blurIntensity?: number;
+  className?: string;
+}) {
+  const angle = direction === 'left' ? 270 : 90;
+  const segmentSize = 1 / (blurLayers + 1);
+
+  return (
+    <div className={`relative ${className}`}>
+      {Array.from({ length: blurLayers }).map((_, i) => {
+        const stops = [i, i+1, i+2, i+3].map((s, si) =>
+          `rgba(238,238,238,${si === 1 || si === 2 ? 1 : 0}) ${s * segmentSize * 100}%`
+        );
+        const gradient = `linear-gradient(${angle}deg, ${stops.join(', ')})`;
+        return (
+          <div
+            key={i}
+            className="pointer-events-none absolute inset-0 rounded-[inherit]"
+            style={{ maskImage: gradient, WebkitMaskImage: gradient, backdropFilter: `blur(${i * blurIntensity}px)` }}
+          />
+        );
+      })}
+    </div>
+  );
+}
+
+// ── Brands data ───────────────────────────────────────────────────────────────
+const brands = [
+  { name: 'Vulcan',     logo: 'https://i.ibb.co/DH54dyTc/vulcan-trent-4911927.png' },
+  { name: 'Toyama',     logo: 'https://i.ibb.co/1fKnGvzW/Toyama-Power-Products-Logo-Vector-svg.png' },
+  { name: 'Vonder',     logo: 'https://i.ibb.co/ds3qcTXq/vonder-logo-3.png' },
+  { name: 'Bosch',      logo: 'https://i.ibb.co/G3HXVBsf/Bosch-Logo-PNG-Image.png' },
+  { name: 'Makita',     logo: 'https://i.ibb.co/tMLLxrhz/Makita-logo.png' },
+  { name: 'Dewalt',     logo: 'https://i.ibb.co/gbsdDZtj/dewalt-logo-2.png' },
+  { name: 'Tramontina', logo: 'https://i.ibb.co/wNBBDBjh/TRAMONTINA-qo-AO8056n8-Pycs-Es-HYQi-N.png' },
+  { name: 'Menegotti',  logo: 'https://i.ibb.co/FbYZ3rsN/Menegotti.png' },
+];
+
+// ── Main export ───────────────────────────────────────────────────────────────
+export const BrandCarousel: React.FC<{
+  onNavigateCategory?: (categoryId: string, subcategory?: string) => void;
+}> = () => {
+  return (
+    <section className="pt-2 pb-16">
       <div className="container mx-auto px-4">
-        <div className="bg-gray-50/50 rounded-xl p-8 border border-gray-100">
+        <div>
           <h2 className="text-lg font-black text-[#0D1B2A] uppercase italic tracking-tighter mb-8 border-l-4 border-[#FF5A00] pl-4 leading-none">
-            Aproveite as promoções
+            Nossas Marcas
           </h2>
 
-          <div className="relative group">
-            <button 
-              onClick={() => scroll('left')}
-              className="absolute -left-6 top-1/2 -translate-y-1/2 z-20 w-11 h-11 bg-white rounded-full flex items-center justify-center shadow-lg text-[#FF5A00] transition-all hover:scale-110 active:scale-95 border-2 border-[#FF5A00]/10"
-            >
-              <ChevronLeft size={24} strokeWidth={3} />
-            </button>
+          <div className="relative">
+            <InfiniteSlider gap={42} speed={60} speedOnHover={20}>
+              {brands.map((brand) => (
+                <div key={brand.name} className="flex flex-col items-center gap-3 shrink-0">
+                  <div className="w-28 h-16 flex items-center justify-center">
+                    <img
+                      src={brand.logo}
+                      alt={brand.name}
+                      loading="lazy"
+                      className="max-w-full max-h-full object-contain"
+                    />
+                  </div>
+                  <span className="text-[10px] font-black uppercase text-gray-400 tracking-widest italic">
+                    {brand.name}
+                  </span>
+                </div>
+              ))}
+            </InfiniteSlider>
 
-            <div className="relative overflow-hidden">
-               <div className="absolute top-0 left-0 bottom-0 w-16 bg-gradient-to-r from-gray-50/50 to-transparent z-10 pointer-events-none" />
-               <div className="absolute top-0 right-0 bottom-0 w-16 bg-gradient-to-l from-gray-50/50 to-transparent z-10 pointer-events-none" />
-               
-               <div ref={scrollRef} className="flex gap-8 overflow-x-auto no-scrollbar scroll-smooth py-4 px-8">
-                 {brands.map((brand, i) => (
-                   <div 
-                     key={i} 
-                     className="flex flex-col items-center gap-3 cursor-pointer group shrink-0"
-                     onClick={() => onNavigateCategory?.('eletricas')} // Demonstração: navega para elétricas ao clicar na marca
-                   >
-                     <div className="w-28 h-28 rounded-full bg-white border border-gray-100 shadow-sm flex items-center justify-center p-4 transition-all">
-                       <img 
-                         src={brand.logo} 
-                         alt={brand.name} 
-                         className="max-w-full max-h-full object-contain filter grayscale hover:grayscale-0 hover:scale-110 transition-all cursor-pointer" 
-                         referrerPolicy="no-referrer"
-                       />
-                     </div>
-                     <span className="text-[10px] font-black uppercase text-gray-400 tracking-widest group-hover:text-[#0D1B2A] transition-colors italic">
-                       {brand.name}
-                     </span>
-                   </div>
-                 ))}
-               </div>
-            </div>
-
-            <button 
-              onClick={() => scroll('right')}
-              className="absolute -right-6 top-1/2 -translate-y-1/2 z-20 w-11 h-11 bg-white rounded-full flex items-center justify-center shadow-xl text-[#FF5A00] transition-all hover:scale-110 active:scale-95 border-2 border-[#FF5A00]/10"
-            >
-              <ChevronRight size={24} strokeWidth={3} />
-            </button>
+            <ProgressiveBlur
+              blurIntensity={1}
+              className="pointer-events-none absolute top-0 left-0 h-full w-[120px]"
+              direction="left"
+            />
+            <ProgressiveBlur
+              blurIntensity={1}
+              className="pointer-events-none absolute top-0 right-0 h-full w-[120px]"
+              direction="right"
+            />
           </div>
         </div>
       </div>
