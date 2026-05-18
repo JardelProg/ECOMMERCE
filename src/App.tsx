@@ -57,11 +57,21 @@ function Storefront() {
   const [selectedSubcategory, setSelectedSubcategory] = useState<string | null>(null);
   const [quantity, setQuantity] = useState(1);
   const [selectedThumb, setSelectedThumb] = useState(0);
+  const [currentPromoCard, setCurrentPromoCard] = useState("https://i.ibb.co/prRd8yzY/SMB-CARD.png");
+
+  const promoCards = [
+    "https://i.ibb.co/prRd8yzY/SMB-CARD.png",
+    "https://i.ibb.co/NdzYFpPN/SMB-CARD-2.png",
+    "https://i.ibb.co/fdtbrBcV/SMB-CARD-3.png"
+  ];
 
   const navigateToProduct = (product: Product) => {
     setSelectedProduct(product);
     setQuantity(1);
     setSelectedThumb(0);
+    // Randomize promo card
+    const randomCard = promoCards[Math.floor(Math.random() * promoCards.length)];
+    setCurrentPromoCard(randomCard);
     setView('product');
     window.scrollTo(0,0);
   };
@@ -346,6 +356,15 @@ function Storefront() {
                     <div className="flex items-center gap-2 text-[11px] text-gray-400 font-medium pb-2 border-b border-gray-200">
                       <Users size={14} />
                       Programa de Afiliados. <span className="text-[#007BFF] cursor-pointer hover:underline uppercase text-[10px] font-black">Ver regras</span>
+                    </div>
+
+                    {/* SMB Design Card */}
+                    <div className="pt-2">
+                       <img 
+                          src={currentPromoCard} 
+                          alt="SMB Promo" 
+                          className="w-full rounded-lg shadow-sm hover:shadow-md transition-shadow cursor-pointer"
+                       />
                     </div>
                   </div>
                 </div>

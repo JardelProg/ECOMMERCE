@@ -16,6 +16,20 @@ interface CategoryPageProps {
   onNavigateCategory: (categoryId: string, subcategory?: string) => void;
 }
 
+const CATEGORY_BANNERS: Record<string, string> = {
+  'limpeza': 'https://i.ibb.co/1thYSy24/LAVAJATO.png',
+  'autocenter': 'https://i.ibb.co/6JsW6xRV/AUTOCENTER.png',
+  'auto-eletrica': 'https://i.ibb.co/TDQC7r0M/BATERIA-12-V.png',
+  'construcao': 'https://i.ibb.co/9HDTBb6v/CIIVL.png',
+  'eletricas': 'https://i.ibb.co/1tVP2nRV/EL-TRICAS.png',
+  'epi': 'https://i.ibb.co/MDY3sqg1/EPI.png',
+  'medicao': 'https://i.ibb.co/4nySKX5J/INSTRUMENTOS.png',
+  'jardim': 'https://i.ibb.co/8nfp6DvS/JARDINAGEM.png',
+  'manuais': 'https://i.ibb.co/7d0gT8Fy/MANUAL.png',
+  'funilaria': 'https://i.ibb.co/bRrXM7vt/PINTURA.png',
+  'pneumaticas': 'https://i.ibb.co/7d6jJkkJ/PNEUMATICAS.png'
+};
+
 export const CategoryPage: React.FC<CategoryPageProps> = ({
   category,
   subcategory: initialSubcategory,
@@ -29,6 +43,8 @@ export const CategoryPage: React.FC<CategoryPageProps> = ({
   const [sortBy, setSortBy] = useState('relevance');
   const [gridView, setGridView] = useState<'grid' | 'list'>('grid');
   const [visibleCount, setVisibleCount] = useState(24);
+
+  const currentBanner = CATEGORY_BANNERS[category.id] || "https://i.ibb.co/zHn4k2Zn/CARDS.png";
 
   // Sync subcategory when prop changes
   React.useEffect(() => {
@@ -117,7 +133,7 @@ export const CategoryPage: React.FC<CategoryPageProps> = ({
         <h1 className="text-[22px] font-black uppercase text-[#222] tracking-tight mb-4">{category.name}</h1>
 
         {/* BRANDS PILLS */}
-        <div className="bg-white rounded-xl p-4 mb-6 shadow-sm border border-gray-100">
+        <div className="bg-white rounded-xl p-4 mb-6 border border-gray-100">
           <div className="flex items-center gap-2 mb-2">
             <span className="text-[11px] font-black uppercase text-gray-500">Marcas:</span>
           </div>
@@ -197,14 +213,39 @@ export const CategoryPage: React.FC<CategoryPageProps> = ({
         {filteredProducts.length > 0 ? (
           <>
             {gridView === 'grid' ? (
-              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 mb-6">
-                {visibleProducts.map(product => (
-                  <ProductCard 
-                    key={product.id} 
-                    product={product} 
-                    onClick={() => onProductClick(product)} 
-                  />
-                ))}
+              <div className="space-y-4 mb-6">
+                <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+                  {visibleProducts.slice(0, 4).map(product => (
+                    <ProductCard 
+                      key={product.id} 
+                      product={product} 
+                      onClick={() => onProductClick(product)} 
+                    />
+                  ))}
+                </div>
+
+                {/* Banner divisor após 1 linha (4 produtos) */}
+                {visibleProducts.length >= 4 && (
+                  <div className="py-2">
+                    <div className="w-full cursor-pointer group relative">
+                      <img 
+                        src={currentBanner} 
+                        className="w-full h-auto group-hover:scale-[1.01] transition-transform duration-500 rounded-xl" 
+                        alt="Promoção Categoria" 
+                      />
+                    </div>
+                  </div>
+                )}
+
+                <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+                  {visibleProducts.slice(4).map(product => (
+                    <ProductCard 
+                      key={product.id} 
+                      product={product} 
+                      onClick={() => onProductClick(product)} 
+                    />
+                  ))}
+                </div>
               </div>
             ) : (
               <div className="flex flex-col gap-3 mb-6">

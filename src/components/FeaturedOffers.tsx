@@ -10,7 +10,7 @@ interface FeaturedOffersProps {
   onNavigateCategory?: (categoryId: string, subcategory?: string) => void;
 }
 
-const DISCOUNTS = [17, 6, 10, 15];
+const DISCOUNTS = [10, 10, 10, 10];
 
 export const FeaturedOffers: React.FC<FeaturedOffersProps> = ({ products, onProductClick, onNavigateCategory }) => {
   const { addToCart } = useCart();
@@ -72,23 +72,19 @@ export const FeaturedOffers: React.FC<FeaturedOffersProps> = ({ products, onProd
                   const priceParts = product.price
                     .toLocaleString('pt-BR', { minimumFractionDigits: 2 })
                     .split(',');
-                  const barColor = '#333333';
-                  
                   return (
                     <div
                       key={product.id}
                       className="min-w-[210px] sm:min-w-[230px] flex flex-col cursor-pointer group hover:brightness-105 transition-all relative border border-[#FF5A00]/20 rounded-xl overflow-hidden bg-[#FF5A00] shadow-md"
                       onClick={() => onProductClick(product)}
                     >
-                      {/* Top Color Bar with Discount */}
-                      <div className="h-14 flex items-center px-4" style={{ backgroundColor: barColor }}>
-                         <div className="flex items-center gap-2 text-white">
-                           <span className="text-4xl font-black leading-none">{discount}%</span>
-                           <div className="flex flex-col leading-none translate-y-[2px]">
-                             <span className="text-[10px] font-black uppercase opacity-80">DE</span>
-                             <span className="text-[10px] font-black uppercase">DESCONTO</span>
-                           </div>
-                         </div>
+                      {/* Top Design Bar with Discount Image */}
+                      <div className="h-14 overflow-hidden flex items-center justify-center bg-[#FF5A00]">
+                         <img 
+                           src={i === 2 ? "https://i.ibb.co/bj1Tcbvz/EXCLL.png" : "https://i.ibb.co/G3tYdx7P/10-OFF.png"} 
+                           className="w-full h-full object-cover" 
+                           alt={i === 2 ? "EXCLUSIVO" : "10% OFF"}
+                         />
                       </div>
 
                       {/* Image Area */}
@@ -135,9 +131,6 @@ export const FeaturedOffers: React.FC<FeaturedOffersProps> = ({ products, onProd
                           Para todo o Brasil
                         </button>
                       </div>
-                      
-                      {/* Ribbon indicator under top bar */}
-                      <div className="absolute top-14 left-4 w-0 h-0 border-l-[6px] border-l-transparent border-r-[6px] border-r-transparent border-t-[6px]" style={{ borderTopColor: barColor }}></div>
                     </div>
                   );
                 })}
